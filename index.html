@@ -1,87 +1,387 @@
-/**
- * 1. ฟังก์ชันหลักสำหรับเปิดหน้าเว็บ HTML
- */
-function doGet(e) {
-  return HtmlService.createHtmlOutputFromFile('index')
-      .setTitle('NOKYOONG PHOTO')
-      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
-      .addMetaTag('viewport', 'width=device-width, initial-scale=1, maximum-scale=1');
-}
-
-/**
- * 2. ฟังก์ชันรับข้อมูลแบบ POST (จุดที่ขาดไป!)
- * ทำหน้าที่เป็นประตูรับข้อมูลจากหน้าเว็บ (fetch) มาประมวลผล
- */
-function doPost(e) {
-  try {
-    // รับข้อมูล JSON ที่ส่งมาจากหน้าเว็บ
-    var requestData = JSON.parse(e.postData.contents);
-    var action = requestData.action;
-
-    if (action === 'savePhoto') {
-      var result = savePhotoToDriveAndSheet(requestData.image);
-      return ContentService.createTextOutput(JSON.stringify(result))
-             .setMimeType(ContentService.MimeType.JSON);
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NOKYOONG PHOTO - All-in-One Premium</title>
+  <!-- โหลด Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&family=Mali:wght@600&display=swap');
+    body { font-family: 'Kanit', sans-serif; background-color: #fdf2f8; } 
+    .title-font { font-family: 'Mali', cursive; }
+    
+    /* เอฟเฟกต์แฟลช */
+    .flash-effect {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: white; z-index: 60; opacity: 0; pointer-events: none;
+      transition: opacity 0.1s ease-out;
+    }
+    .flash-active { opacity: 0.9; }
+    
+    /* สไตล์กล้อง */
+    .video-container {
+      position: relative; width: 100%; height: 100%; background-color: #000; overflow: hidden;
+    }
+    video {
+      width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);
     }
     
-    // กรณีขอข้อมูลแกลลอรี่
-    if (action === 'getGallery') {
-      var gallery = getGalleryData();
-      return ContentService.createTextOutput(JSON.stringify({ success: true, gallery: gallery }))
-             .setMimeType(ContentService.MimeType.JSON);
+    /* เมนูตั้งค่าแบบพับได้ */
+    .settings-panel {
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+    }
+    .settings-collapsed {
+      transform: translateY(20px) scale(0.95);
+      opacity: 0;
+      pointer-events: none;
     }
 
-  } catch (error) {
-    return ContentService.createTextOutput(JSON.stringify({ success: false, error: error.toString() }))
-           .setMimeType(ContentService.MimeType.JSON);
-  }
-}
+    /* ปุ่มลบรูปรายใบ */
+    .delete-btn {
+      position: absolute; top: -6px; right: -6px; width: 24px; height: 24px;
+      background: #ef4444; color: white; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: bold; cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 10; border: 2px solid white;
+    }
 
-/**
- * 3. ฟังก์ชันบันทึกรูปลง Drive และ Sheets
- */
-function savePhotoToDriveAndSheet(base64Data) {
-  try {
-    var data = base64Data.split(',')[1];
-    var blob = Utilities.newBlob(Utilities.base64Decode(data), 'image/jpeg', 'NOKYOONG_' + new Date().getTime() + '.jpg');
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    input[type=range] { accent-color: #ec4899; }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-2 md:p-4 text-slate-800">
 
-    // บันทึกลง Drive
-    var file = DriveApp.createFile(blob);
-    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-
-    // บันทึกลง Sheets
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-    var fileUrl = file.getUrl();
-    var timestamp = new Date();
+  <div class="max-w-5xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden relative border-4 border-white">
     
-    // คอลัมน์ A: วันที่, คอลัมน์ B: ลิงก์, คอลัมน์ C: ID อ้างอิง
-    sheet.appendRow([timestamp, fileUrl, file.getId()]);
+    <div id="flash-overlay" class="flash-effect"></div>
 
-    return { success: true, url: fileUrl, id: file.getId() };
+    <!-- ================= Step 0: Welcome ================= -->
+    <div id="step-welcome" class="flex flex-col items-center justify-center p-8 md:p-12 text-center min-h-[600px] bg-gradient-to-br from-pink-50 to-white">
+      <div class="w-24 h-24 bg-slate-800 rounded-3xl flex items-center justify-center mb-6 text-white shadow-xl transform rotate-3">
+        <span class="text-5xl text-center">✨</span>
+      </div>
+      <h1 class="text-4xl font-bold mb-4 text-slate-800 title-font text-center">NOKYOONG PHOTO</h1>
+      
+      <div class="bg-white p-6 rounded-2xl border-2 border-pink-100 shadow-sm mb-10 w-full max-w-sm">
+        <label class="block text-xs font-bold text-slate-400 uppercase mb-4 tracking-widest text-center">เลือกรูปแบบภาพถ่าย</label>
+        <div class="grid grid-cols-2 gap-3">
+          <button onclick="setLayout('strip')" id="layout-btn-strip" class="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-pink-500 bg-pink-50 transition-all text-center">
+            <div class="w-8 h-12 border-2 border-pink-500 rounded flex flex-col gap-1 p-1">
+              <div class="flex-1 bg-pink-200"></div><div class="flex-1 bg-pink-200"></div><div class="flex-1 bg-pink-200"></div>
+            </div>
+            <span class="text-xs font-bold text-pink-600 text-center">3 รูป (Strip)</span>
+          </button>
+          <button onclick="setLayout('single')" id="layout-btn-single" class="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-slate-100 hover:border-pink-200 transition-all text-center">
+            <div class="w-12 h-8 border-2 border-slate-300 rounded p-1">
+              <div class="w-full h-full bg-slate-200"></div>
+            </div>
+            <span class="text-xs font-bold text-slate-500 text-center">1 รูป (เดี่ยว)</span>
+          </button>
+        </div>
+      </div>
 
-  } catch (error) {
-    return { success: false, error: error.toString() };
-  }
-}
+      <div class="grid grid-cols-1 gap-4 w-full max-w-sm">
+        <button onclick="startLiveCamera()" class="w-full py-4 bg-pink-500 hover:bg-pink-600 text-white rounded-2xl font-bold text-lg shadow-lg flex items-center justify-center gap-3">🎥 เข้าสู่โหมดถ่ายภาพ</button>
+        <button onclick="showStep('step-print-station')" class="w-full py-4 bg-slate-800 hover:bg-slate-900 text-white rounded-2xl font-bold text-lg shadow-lg flex items-center justify-center gap-3">🖨️ สถานีเครื่องปริ้นท์</button>
+      </div>
+    </div>
 
-/**
- * 4. ฟังก์ชันดึงข้อมูลรูปภาพล่าสุดมาแสดงในแกลลอรี่
- */
-function getGalleryData() {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  var data = sheet.getDataRange().getValues();
-  var gallery = [];
-  
-  // วนลูปดึงข้อมูลจากล่างขึ้นบน (รูปล่าสุดอยู่บน)
-  for (var i = data.length - 1; i >= 1; i--) {
-    if (data[i][1]) { // ถ้ามีลิงก์รูป
-      gallery.push({
-        date: data[i][0],
-        url: data[i][1],
-        id: data[i][2] || i
+    <!-- ================= Step 1: Camera ================= -->
+    <div id="step-camera" class="hidden flex-col h-[85vh] min-h-[600px] bg-slate-900 text-center">
+      <div class="p-4 bg-slate-900 text-white flex justify-between items-center z-10 border-b border-slate-800 shrink-0">
+        <button onclick="resetToWelcome()" class="text-slate-400 hover:text-white px-3 py-1 bg-slate-800 rounded-lg text-xs">⬅️ ยกเลิก</button>
+        <span class="font-semibold text-sm md:text-lg">Camera View</span>
+        <span id="live-photo-counter" class="text-slate-200 font-bold bg-slate-800 px-4 py-2 rounded-lg text-xs">0/3</span>
+      </div>
+
+      <div class="flex flex-col md:flex-row flex-1 overflow-hidden relative">
+        <div class="flex-1 video-container relative flex items-center justify-center bg-black">
+          <video id="video-element" autoplay playsinline muted></video>
+          <div id="camera-loading" class="absolute inset-0 flex items-center justify-center bg-black text-white text-lg z-0">เปิดกล้อง...</div>
+          <div id="countdown-overlay" class="hidden absolute inset-0 flex items-center justify-center z-20 pointer-events-none text-center">
+            <span id="countdown-text" class="text-[150px] md:text-[200px] font-bold text-white drop-shadow-2xl text-center">3</span>
+          </div>
+
+          <button onclick="toggleSettings()" class="absolute bottom-6 left-6 w-12 h-12 bg-pink-500 text-white rounded-full flex items-center justify-center shadow-lg z-40 border-2 border-white text-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+          </button>
+
+          <div id="live-settings-panel" class="settings-panel absolute bottom-20 left-6 bg-black/70 backdrop-blur-md p-5 rounded-2xl text-white z-30 border border-white/20 w-72 shadow-2xl">
+            <div id="filter-ui-live"></div>
+          </div>
+        </div>
+
+        <div class="w-full md:w-48 bg-slate-800 border-t md:border-t-0 md:border-l border-slate-700 flex flex-row md:flex-col items-center justify-between p-4 md:py-8 shrink-0 shadow-2xl z-10 gap-4 text-center">
+          <div class="flex flex-row md:flex-col gap-3 w-full justify-center md:justify-start items-center flex-1 text-center" id="live-slots-container"></div>
+          <button id="btn-live-capture" onclick="startCountdown()" class="w-20 h-20 md:w-24 md:h-24 bg-slate-700 border-4 border-slate-500 rounded-full flex items-center justify-center hover:bg-slate-600 transition-all group shadow-xl text-center">
+            <div class="w-14 h-14 md:w-16 md:h-16 bg-white rounded-full group-hover:scale-95 flex items-center justify-center text-3xl text-center">📸</div>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= Step 2: Result ================= -->
+    <div id="step-result" class="hidden flex-col md:flex-row h-[85vh] min-h-[600px] text-center">
+      <div class="flex-1 bg-slate-200 p-6 md:p-8 flex items-center justify-center overflow-y-auto border-r border-slate-300 relative text-center">
+        <canvas id="result-canvas" class="hidden"></canvas>
+        <div id="final-A6-preview" class="w-full max-w-[320px] shadow-2xl transform transition-transform cursor-zoom-in group text-center" onclick="openModal(finalA6ImageDataUrl)">
+          <div class="bg-white rounded-sm shadow-md overflow-hidden relative text-center" id="final-preview-container" style="aspect-ratio: 1240/1748;"></div>
+          <div class="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-center">
+            <span class="bg-white px-4 py-2 rounded-full font-bold text-sm shadow-lg text-center">🔍 คลิกขยายดูรูป</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="w-full md:w-80 p-6 md:p-8 flex flex-col justify-start bg-white gap-4 relative overflow-y-auto shrink-0 hide-scrollbar text-center">
+        <h2 class="text-xl font-bold text-slate-800 title-font text-center text-center">แต่งสีภาพก่อนปริ้นท์ 🎨</h2>
+        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 shadow-sm text-center">
+            <div id="filter-ui-result"></div>
+        </div>
+        <div id="save-status" class="hidden p-3 bg-green-100 text-green-700 rounded-lg text-sm mb-2 text-center font-semibold text-center text-center">✅ บันทึกเข้าระบบเรียบร้อย!</div>
+        <div class="flex flex-col gap-2 text-center text-center">
+          <button onclick="saveToCloud()" id="btn-cloud" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold flex items-center justify-center gap-2 shadow-lg text-sm transition-all text-center">
+            <span id="cloud-text">☁️ บันทึกเข้าระบบ</span>
+            <div id="cloud-loader" class="hidden absolute w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin right-4 text-center"></div>
+          </button>
+          <button onclick="printPhotoLocal()" class="w-full py-3 bg-pink-600 hover:bg-pink-700 text-white rounded-xl font-semibold flex items-center justify-center gap-2 shadow-lg text-sm text-center">🖨️ ปริ้นท์ทันที</button>
+          <button onclick="downloadPhoto()" class="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-semibold flex items-center justify-center gap-2 shadow-lg text-sm text-center">⬇️ ดาวน์โหลด</button>
+        </div>
+        <button onclick="resetBooth()" class="w-full py-3 bg-white border-2 border-slate-200 text-slate-600 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all mt-1 text-sm text-center">🔄 กลับไปเริ่มใหม่</button>
+      </div>
+    </div>
+
+    <!-- ================= Step 3: Print Station ================= -->
+    <div id="step-print-station" class="hidden flex-col h-[85vh] min-h-[600px] bg-slate-100 text-center">
+      <div class="p-4 md:p-6 bg-slate-900 text-white flex justify-between items-center shadow-md z-10 shrink-0 text-center">
+        <button onclick="showStep('step-welcome')" class="text-slate-400 hover:text-white px-3 py-1 bg-slate-800 rounded-lg text-sm">⬅️ กลับ</button>
+        <h1 class="text-xl font-bold title-font flex items-center gap-2 text-center text-center">🖨️ Print Gallery</h1>
+        <button onclick="refreshGallery()" id="btn-refresh-gallery" class="px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-xs font-semibold relative text-center">
+          <span id="refresh-text">🔄 โหลดรูป</span>
+          <div id="refresh-loader" class="hidden absolute right-3 w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin text-center"></div>
+        </button>
+      </div>
+      <div class="flex-1 overflow-y-auto p-4 md:p-8 hide-scrollbar text-center text-center text-center"><div id="print-gallery" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 text-center text-center text-center"></div></div>
+    </div>
+
+  </div>
+
+  <script>
+    // --- 🚨 สิ้นสุดการตั้งค่า API 🚨 ---
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxAzCr89EXs-MGKMH5fzPnqzhJOJZrT1Ts2SXyiYsP9HvFnU2U-macw1QzFg9DubAJXhA/exec"; 
+
+    let stream = null;
+    let photos = []; 
+    let layoutType = 'strip'; 
+    let totalPhotosNeeded = 3;
+
+    // Filter State
+    let filterMode = 'color'; 
+    let zoomLevel = 'wide';   
+    let zoomFactor = 1.0;
+    let inkDensity = 100;
+    let isSettingsCollapsed = false;
+    let finalA6ImageDataUrl = '';
+
+    const videoElement = document.getElementById('video-element');
+    const resultCanvas = document.getElementById('result-canvas');
+
+    function injectFilterUI(suffix) {
+      document.getElementById(`filter-ui-${suffix}`).innerHTML = `
+        <div class="mb-4 ${suffix === 'result' ? 'hidden' : ''}">
+          <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2 text-left">เลือกเลนส์</label>
+          <div class="flex gap-1">
+            <button onclick="setLens('wide')" id="btn-lens-wide-${suffix}" class="flex-1 py-1 rounded-lg text-[9px] font-bold transition-all border text-center">Wide</button>
+            <button onclick="setLens('close')" id="btn-lens-close-${suffix}" class="flex-1 py-1 rounded-lg text-[9px] font-bold transition-all border text-center">Close</button>
+          </div>
+        </div>
+        <div class="mb-4 text-left">
+          <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2 text-left">สไตล์ฟิลเตอร์</label>
+          <div class="grid grid-cols-2 gap-1.5 text-center">
+            <button onclick="setFilterMode('color')" id="btn-mode-color-${suffix}" class="py-1.5 rounded-lg text-[9px] font-bold border-2 text-center text-center">Normal</button>
+            <button onclick="setFilterMode('aura')" id="btn-mode-aura-${suffix}" class="py-1.5 rounded-lg text-[9px] font-bold border-2 text-center text-center">Aura Pink</button>
+            <button onclick="setFilterMode('vibrant')" id="btn-mode-vibrant-${suffix}" class="py-1.5 rounded-lg text-[9px] font-bold border-2 text-center text-center">Vivid Color</button>
+            <button onclick="setFilterMode('bw')" id="btn-mode-bw-${suffix}" class="py-1.5 rounded-lg text-[9px] font-bold border-2 text-center text-center text-center">B&W Classic</button>
+          </div>
+        </div>
+        <div class="space-y-1 text-left">
+          <div class="flex justify-between items-center">
+            <label class="text-[10px] font-bold text-slate-400 uppercase text-left">ความเข้มหมึก</label>
+            <span id="val-density-${suffix}" class="text-[10px] font-bold text-pink-400 text-center">100%</span>
+          </div>
+          <input type="range" id="input-density-${suffix}" min="50" max="150" value="100" oninput="syncDensity(this.value)" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer text-center">
+        </div>
+      `;
+    }
+
+    injectFilterUI('live');
+    injectFilterUI('result');
+
+    function showStep(stepId) {
+      ['step-welcome', 'step-camera', 'step-result', 'step-print-station'].forEach(id => document.getElementById(id).classList.add('hidden'));
+      const target = document.getElementById(stepId);
+      target.classList.remove('hidden'); target.classList.add('flex');
+      if (stepId === 'step-camera') { updateFilters(); updateSlots(); }
+      if (stepId === 'step-result') generatePhotoStrip();
+      if (stepId === 'step-print-station') refreshGallery();
+    }
+
+    function setLayout(type) { layoutType = type; totalPhotosNeeded = (type === 'strip') ? 3 : 1; document.getElementById('layout-btn-strip').classList.toggle('border-pink-500', type === 'strip'); document.getElementById('layout-btn-single').classList.toggle('border-pink-500', type === 'single'); }
+    function toggleSettings() { isSettingsCollapsed = !isSettingsCollapsed; document.getElementById('live-settings-panel').classList.toggle('settings-collapsed', isSettingsCollapsed); }
+    function setLens(level) { zoomLevel = level; zoomFactor = (level === 'close') ? 1.5 : 1.0; updateFilters(); }
+    function setFilterMode(m) { filterMode = m; updateFilters(); if (photos.length === totalPhotosNeeded && !document.getElementById('step-result').classList.contains('hidden')) generatePhotoStrip(); }
+    function syncDensity(v) { inkDensity = v; updateFilters(); if (photos.length === totalPhotosNeeded && !document.getElementById('step-result').classList.contains('hidden')) generatePhotoStrip(); }
+
+    function updateFilters() {
+      ['live', 'result'].forEach(s => {
+          const bW = document.getElementById(`btn-lens-wide-${s}`); const bC = document.getElementById(`btn-lens-close-${s}`);
+          if (bW && bC) { bW.className = (zoomLevel === 'wide') ? "flex-1 py-1 rounded-lg text-[9px] font-bold bg-pink-500 text-white border-pink-500 text-center" : "flex-1 py-1 rounded-lg text-[9px] font-bold bg-transparent text-slate-400 border-slate-300 text-center"; bC.className = (zoomLevel === 'close') ? "flex-1 py-1 rounded-lg text-[9px] font-bold bg-pink-500 text-white border-pink-500 text-center" : "flex-1 py-1 rounded-lg text-[9px] font-bold bg-transparent text-slate-400 border-slate-300 text-center"; }
+          ['color', 'aura', 'vibrant', 'bw'].forEach(m => {
+              const btn = document.getElementById(`btn-mode-${m}-${s}`);
+              if (btn) btn.className = (filterMode === m) ? "py-1.5 rounded-lg text-[9px] font-bold bg-pink-500 text-white border-pink-500 text-center" : "py-1.5 rounded-lg text-[9px] font-bold bg-white text-slate-600 border-slate-200 text-center";
+          });
+          const el = document.getElementById(`input-density-${s}`); if (el) { el.value = inkDensity; document.getElementById(`val-density-${s}`).innerText = inkDensity + '%'; }
       });
+      let gs=0, sat=inkDensity, br=1.5-(inkDensity/200), con=inkDensity/100, sep=0, hue=0;
+      if(filterMode === 'vibrant') { sat*=2; con*=1.2; }
+      if(filterMode === 'aura') { br*=1.1; con*=0.9; sat*=1.1; sep=10; hue=-15; }
+      if(filterMode === 'bw') { gs=100; sat=0; }
+      const fStr = `grayscale(${gs}%) sepia(${sep}%) hue-rotate(${hue}deg) brightness(${br}) contrast(${con}) saturate(${sat}%)`;
+      videoElement.style.filter = fStr; videoElement.style.transform = `scaleX(-1) scale(${zoomFactor})`;
     }
-    if (gallery.length >= 20) break; // ดึงแค่ 20 รูปล่าสุดพอครับ
-  }
-  return gallery;
-}
+
+    function updateSlots() {
+      const container = document.getElementById('live-slots-container'); container.innerHTML = '';
+      for (let i = 0; i < totalPhotosNeeded; i++) {
+        const slot = document.createElement('div');
+        slot.className = photos[i] ? "w-16 h-24 md:w-full md:h-auto md:aspect-[2/3] rounded-lg border-2 border-solid border-pink-500 bg-slate-700/50 overflow-hidden relative shrink-0 text-center" : "w-16 h-24 md:w-full md:h-auto md:aspect-[2/3] rounded-lg border-2 border-dashed border-slate-600 bg-slate-700/50 overflow-hidden relative shrink-0 text-center";
+        if (photos[i]) slot.innerHTML = `<img src="${photos[i]}" class="w-full h-full object-cover"><div class="delete-btn" onclick="deletePhoto(${i})">×</div>`;
+        else slot.innerHTML = `<span class="text-2xl opacity-20 font-bold text-center">${i + 1}</span>`;
+        container.appendChild(slot);
+      }
+      document.getElementById('live-photo-counter').innerText = `${photos.length}/${totalPhotosNeeded} รูป`;
+      const btn = document.getElementById('btn-live-capture');
+      if (photos.length < totalPhotosNeeded) { btn.classList.remove('hidden'); btn.disabled = false; }
+      else { btn.classList.add('hidden'); setTimeout(() => { stopLiveCamera(); showStep('step-result'); }, 800); }
+    }
+
+    function deletePhoto(index) { event.stopPropagation(); photos.splice(index, 1); updateSlots(); }
+
+    async function startLiveCamera() {
+      photos = [];
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 }, audio: false });
+        videoElement.srcObject = stream;
+        videoElement.onloadedmetadata = () => videoElement.play().then(() => document.getElementById('camera-loading').classList.add('hidden'));
+        showStep('step-camera');
+      } catch (err) { alert("กล้องขัดข้องครับ"); }
+    }
+
+    function stopLiveCamera() { if (stream) stream.getTracks().forEach(t => t.stop()); }
+
+    async function startCountdown() {
+      if (photos.length >= totalPhotosNeeded) return;
+      const text = document.getElementById('countdown-text'); document.getElementById('countdown-overlay').classList.remove('hidden');
+      for(let i=3; i>0; i--) { text.innerText = i; text.style.animation = 'none'; text.offsetHeight; text.style.animation = 'ping 1s infinite'; await new Promise(r => setTimeout(r, 1000)); }
+      document.getElementById('countdown-overlay').classList.add('hidden'); takePhoto(); 
+    }
+
+    function takePhoto() {
+      document.getElementById('flash-overlay').classList.add('flash-active'); setTimeout(() => document.getElementById('flash-overlay').classList.remove('flash-active'), 150);
+      const canvas = document.createElement('canvas'); canvas.width = 660; canvas.height = 440;
+      const ctx = canvas.getContext('2d');
+      const vW = videoElement.videoWidth; const vH = videoElement.videoHeight;
+      const sW = vW / zoomFactor; const sH = vH / zoomFactor;
+      const sX = (vW - sW) / 2; const sY = (vH - sH) / 2;
+      ctx.translate(canvas.width, 0); ctx.scale(-1, 1);
+      ctx.drawImage(videoElement, sX, sY, sW, sH, 0, 0, canvas.width, canvas.height);
+      photos.push(canvas.toDataURL('image/jpeg', 0.95)); updateSlots();
+    }
+
+    function generatePhotoStrip() {
+      const ctx = resultCanvas.getContext('2d'); const A6W = 1240, A6H = 1748;
+      resultCanvas.width = A6W; resultCanvas.height = A6H;
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, A6W, A6H);
+      const preview = document.getElementById('final-preview-container'); preview.innerHTML = `<div class="absolute inset-0 bg-white text-center"></div>`;
+      
+      let gs=0, sat=inkDensity, br=1.5-(inkDensity/200), con=inkDensity/100, sep=0, hue=0;
+      if(filterMode === 'vibrant') { sat*=2; con*=1.2; }
+      if(filterMode === 'aura') { br*=1.1; con*=0.9; sat*=1.1; sep=10; hue=-15; }
+      if(filterMode === 'bw') { gs=100; sat=0; }
+      const fStr = `grayscale(${gs}%) sepia(${sep}%) hue-rotate(${hue}deg) brightness(${br}) contrast(${con}) saturate(${sat}%)`;
+
+      let loaded = 0;
+      if (layoutType === 'strip') {
+          const gap = 40, startY = 120, startX = (A6W - 660) / 2; 
+          photos.forEach((src, i) => {
+            const y = startY + (i * (440 + gap));
+            const img = new Image();
+            img.onload = () => {
+              ctx.shadowColor = 'rgba(0,0,0,0.15)'; ctx.shadowBlur = 15; ctx.filter = fStr;
+              ctx.drawImage(img, startX, y, 660, 440);
+              ctx.filter = 'none'; ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 2; ctx.strokeRect(startX, y, 660, 440);
+              const div = document.createElement('div'); div.className = "absolute shadow-md overflow-hidden text-center";
+              div.style.left = `${(startX/A6W)*100}%`; div.style.top = `${(y/A6H)*100}%`;
+              div.style.width = `${(660/A6W)*100}%`; div.style.height = `${(440/A6H)*100}%`;
+              div.innerHTML = `<img src="${src}" style="filter:${fStr}" class="w-full h-full object-cover">`;
+              preview.appendChild(div);
+              if (++loaded === 3) finishDrawing(y + 440 + 100);
+            }; img.src = src;
+          });
+      } else {
+          const SW = 1100, SH = SW * (440/660), sX = (A6W-SW)/2, sY = (A6H-SH)/2 - 100;
+          const img = new Image();
+          img.onload = () => {
+              ctx.shadowColor = 'rgba(0,0,0,0.15)'; ctx.shadowBlur = 30; ctx.filter = fStr;
+              ctx.drawImage(img, sX, sY, SW, SH);
+              ctx.filter = 'none'; ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 4; ctx.strokeRect(sX, sY, SW, SH);
+              const div = document.createElement('div'); div.className = "absolute shadow-xl overflow-hidden text-center";
+              div.style.left = `${(sX/A6W)*100}%`; div.style.top = `${(sY/A6H)*100}%`;
+              div.style.width = `${(SW/A6W)*100}%`; div.style.height = `${(SH/A6H)*100}%`;
+              div.innerHTML = `<img src="${photos[0]}" style="filter:${fStr}" class="w-full h-full object-cover">`;
+              preview.appendChild(div);
+              finishDrawing(sY + SH + 150);
+          }; img.src = photos[0];
+      }
+
+      function finishDrawing(textY) {
+        ctx.fillStyle = '#1e293b'; ctx.font = 'bold 60px "Mali", sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText('✨ NOKYOONG PHOTO ✨', A6W / 2, textY);
+        ctx.font = '35px sans-serif'; ctx.fillStyle = '#64748b';
+        const date = new Date().toLocaleDateString('th-TH');
+        ctx.fillText(`ครูหนึ่ง • ${date}`, A6W / 2, textY + 60);
+        const title = document.createElement('div'); title.className = "absolute w-full text-center flex flex-col items-center text-center";
+        title.style.top = `${((textY+20)/A6H)*100}%`; title.style.transform = "translateY(-50%)";
+        title.innerHTML = `<div class="font-bold text-slate-800 title-font text-lg">✨ NOKYOONG PHOTO ✨</div><div class="text-slate-500 text-[10px]">ครูหนึ่ง • ${date}</div>`;
+        preview.appendChild(title); finalA6ImageDataUrl = resultCanvas.toDataURL('image/jpeg', 0.95);
+      }
+    }
+
+    function getDirectImageUrl(url) { if (!url) return ''; const match = url.match(/\/d\/(.+?)\//); return match ? `https://lh3.googleusercontent.com/d/${match[1]}` : url; }
+    function formatThaiDate(str) { try { const d = new Date(str); return isNaN(d) ? str : d.toLocaleDateString('th-TH') + ' ' + d.toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'}); } catch(e) { return str; } }
+    function openModal(src) { document.getElementById('modal-img').src = src; document.getElementById('image-modal').classList.remove('hidden'); }
+    function closeModal() { document.getElementById('image-modal').classList.add('hidden'); }
+    function printPhotoLocal() { if(finalA6ImageDataUrl) printPhotoFromUrl(finalA6ImageDataUrl); }
+    function printPhotoFromUrl(url) {
+      const w = window.open('', '_blank');
+      if (w) { w.document.write(`<html><head><style>body{margin:0;display:flex;justify-content:center;align-items:center;height:100vh;}img{max-width:100%;max-height:100%;object-fit:contain;}@media print{@page{margin:0;size:A6;}img{width:100vw;height:100vh;}}</style></head><body><img src="${url}" onload="setTimeout(()=>window.print(),1000)"></body></html>`); w.document.close(); }
+      else alert("Pop-up ถูกบล็อกครับ");
+    }
+    function downloadPhoto() { const a = document.createElement('a'); a.download = `NOKYOONG_${Date.now()}.png`; a.href = finalA6ImageDataUrl; a.click(); }
+    
+    async function saveToCloud() {
+      const btn = document.getElementById('btn-cloud'); const loader = document.getElementById('cloud-loader');
+      btn.disabled = true; loader.classList.remove('hidden');
+      try {
+        const res = await fetch(GAS_API_URL, { method: 'POST', headers: {'Content-Type':'text/plain'}, body: JSON.stringify({ action: 'savePhoto', image: finalA6ImageDataUrl }) });
+        const data = await res.json(); loader.classList.add('hidden');
+        if(data.success) document.getElementById('save-status').classList.remove('hidden');
+        else alert("Error: " + data.error);
+      } catch (e) { loader.classList.add('hidden'); btn.disabled = false; alert("ส่งไม่สำเร็จครับ"); }
+    }
+    
+    function resetBooth() { stopLiveCamera(); photos = []; showStep('step-welcome'); }
+    function refreshGallery() { /* ใส่โค้ดดึงแกลลอรี่จาก API */ }
+  </script>
+</body>
+</html>
