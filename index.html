@@ -5,6 +5,8 @@
     <title>Photo Booth A6</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- เพิ่มฟอนต์ Kanit สำหรับข้อความบนรูปภาพ -->
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;700&display=swap" rel="stylesheet">
     <style>
         /* สไตล์สำหรับการปริ้นขนาด A6 */
         @media print {
@@ -131,7 +133,7 @@
 
     <script>
         // 🚨 อัปเดตลิงก์ Apps Script ของคุณเรียบร้อยแล้ว 🚨
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzO-pwI4kvbgr2BHx6G11xOqxnvq4tpUtW_ML3kLjGitRk_kxPtQSfn1VuP7Q7sh7RO/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby_Uv9NisjrB-XF-R8NhMSXP3M_F9jevyaOFATFbfF72Ba8CwCQ7tO7hPAbAMQzgaxA/exec';
 
         // --- ตัวแปรจัดการสถานะ ---
         let currentFilter = 'normal';
@@ -261,7 +263,8 @@
                 startBtn.disabled = false;
                 startBtn.classList.remove('opacity-70', 'cursor-not-allowed');
             } else {
-                // ถ่ายครบแล้ว ซ่อนปุ่มถ่าย แสดงปุ่มอัปโหลด
+                // ถ่ายครบแล้ว วาดข้อความส่วนท้าย และแสดงปุ่มอัปโหลด
+                drawFooterText();
                 startBtn.classList.add('hidden');
                 document.getElementById('action-buttons').classList.remove('hidden');
                 document.getElementById('action-buttons').classList.add('flex');
@@ -305,26 +308,48 @@
             tCtx.scale(-1, 1);
             tCtx.drawImage(video, 0, 0, tempCanvas.width, tempCanvas.height);
             
-            // นำภาพไปวาดลง Canvas หลัก (A6 Layout)
-            // A6 size ที่เราตั้งไว้ 1200 x 1800
-            // จัดเรียง 3 รูป แนวนอน บนกระดาษแนวตั้ง
-            // คำนวณขนาดและตำแหน่ง (ให้มีขอบขาว)
-            const margin = 60;
-            const photoWidth = 1200 - (margin * 2);
-            // ให้รูปเป็นอัตราส่วน 16:9 
-            const photoHeight = photoWidth * (9/16); 
-            // ช่องไฟระหว่างรูป
-            const gap = (1800 - (margin * 2) - (photoHeight * 3)) / 2;
-
-            const x = margin;
-            const y = margin + (index * (photoHeight + gap));
+            // --- การจัดเรียงเลย์เอาต์ใหม่ เพื่อเว้นที่ด้านล่างให้ข้อความ ---
+            const topMargin = 80;
+            const bottomFooter = 250; // พื้นที่สำหรับข้อความด้านล่าง
+            const gap = 40; // ช่องว่างระหว่างรูป
+            
+            // คำนวณความสูงของรูปแต่ละใบให้พอดีกับพื้นที่
+            const availableHeight = canvas.height - topMargin - bottomFooter;
+            const photoHeight = (availableHeight - (gap * 2)) / 3;
+            
+            // คำนวณความกว้างตามสัดส่วนของกล้อง (รักษาสัดส่วนเดิมไว้)
+            const videoAspect = video.videoWidth / video.videoHeight;
+            const photoWidth = photoHeight * videoAspect;
+            
+            // จัดให้อยู่กึ่งกลางหน้ากระดาษแนวนอน
+            const x = (canvas.width - photoWidth) / 2;
+            const y = topMargin + (index * (photoHeight + gap));
 
             ctx.drawImage(tempCanvas, x, y, photoWidth, photoHeight);
             
-            // วาดกรอบรูปบางๆ
+            // วาดกรอบรูป
             ctx.strokeStyle = "#e5e7eb";
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 4;
             ctx.strokeRect(x, y, photoWidth, photoHeight);
+        }
+
+        function drawFooterText() {
+            ctx.fillStyle = "black";
+            ctx.textAlign = "center";
+            
+            // บรรทัดแรก: NOKYOONG PHOTO
+            ctx.font = "bold 60px 'Kanit', sans-serif";
+            ctx.fillText("NOKYOONG PHOTO", canvas.width / 2, canvas.height - 130);
+            
+            // บรรทัดที่สอง: ครูหนึ่ง + วันที่/เวลา
+            ctx.font = "35px 'Kanit', sans-serif";
+            const now = new Date();
+            // จัดรูปแบบวันที่ เช่น 20 มี.ค. 2569
+            const dateStr = now.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
+            // จัดรูปแบบเวลา เช่น 18:00
+            const timeStr = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+            
+            ctx.fillText("ครูหนึ่ง | " + dateStr + " " + timeStr, canvas.width / 2, canvas.height - 70);
         }
 
         function sleep(ms) {
@@ -365,16 +390,15 @@
             
             const base64Data = canvas.toDataURL('image/jpeg', 0.85); // บีบอัด JPEG 85%
 
+            // เปลี่ยนมาใช้ URLSearchParams เพื่อป้องกันปัญหาข้อมูลสูญหายและถูกบล็อกตอนเชื่อมต่อ Google
+            const formData = new URLSearchParams();
+            formData.append('action', 'savePhoto');
+            formData.append('data', base64Data);
+
             // ส่งข้อมูลด้วย fetch (API) แทน google.script.run
             fetch(SCRIPT_URL, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'text/plain;charset=utf-8',
-                },
-                body: JSON.stringify({
-                    action: 'savePhoto',
-                    data: base64Data
-                })
+                body: formData
             })
             .then(response => response.json())
             .then(data => {
@@ -383,7 +407,7 @@
                     statusEl.className = "mt-6 text-lg font-semibold text-green-600 text-center";
                     setTimeout(() => resetCapture(), 3000);
                 } else {
-                    statusEl.innerText = "❌ เกิดข้อผิดพลาด: " + data.error;
+                    statusEl.innerText = "❌ เกิดข้อผิดพลาดฝั่งเซิร์ฟเวอร์: " + data.error;
                     statusEl.className = "mt-6 text-lg font-semibold text-red-600 text-center";
                     // แสดงปุ่มใหม่เผื่อให้ส่งอีกรอบ
                     actionBtns.classList.remove('hidden');
