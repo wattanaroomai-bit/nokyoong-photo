@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NOKYOONG PHOTO - Stable Direct Edition</title>
+  <title>NOKYOONG PHOTO - Premium Stable Edition</title>
   <!-- โหลด Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- โหลด Library สำหรับสร้าง QR Code แบบ Offline -->
@@ -30,20 +30,20 @@
   <div class="max-w-5xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden relative border-4 border-white text-center">
     <div id="flash-overlay" class="flash-effect"></div>
 
-    <!-- Welcome -->
-    <div id="step-welcome" class="flex flex-col items-center justify-center p-8 md:p-12 text-center min-h-[600px] bg-gradient-to-br from-pink-50 to-white">
+    <!-- Step 0: Welcome -->
+    <div id="step-welcome" class="flex flex-col items-center justify-center p-8 md:p-12 text-center min-h-[600px] bg-gradient-to-br from-pink-50 to-white text-center">
       <div class="w-24 h-24 bg-slate-800 rounded-3xl flex items-center justify-center mb-6 text-white shadow-xl transform rotate-3 text-center"><span class="text-5xl">✨</span></div>
       <h1 class="text-4xl font-bold mb-4 text-slate-800 title-font">NOKYOONG PHOTO</h1>
-      <div class="bg-white p-6 rounded-2xl border-2 border-pink-100 shadow-sm mb-10 w-full max-w-sm text-center">
-        <label class="block text-xs font-bold text-slate-400 uppercase mb-4 tracking-widest">เลือกรูปแบบภาพถ่าย</label>
+      <div class="bg-white p-6 rounded-2xl border-2 border-pink-100 shadow-sm mb-10 w-full max-w-sm">
+        <label class="block text-xs font-bold text-slate-400 uppercase mb-4 tracking-widest text-center">เลือกรูปแบบภาพถ่าย</label>
         <div class="grid grid-cols-2 gap-3">
           <button onclick="setLayout('strip')" id="layout-btn-strip" class="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-pink-500 bg-pink-50 transition-all text-center">
             <div class="w-8 h-12 border-2 border-pink-500 rounded flex flex-col gap-1 p-1 text-center"><div class="flex-1 bg-pink-200"></div><div class="flex-1 bg-pink-200"></div><div class="flex-1 bg-pink-200"></div></div>
             <span class="text-xs font-bold text-pink-600">3 รูป (Strip)</span>
           </button>
           <button onclick="setLayout('single')" id="layout-btn-single" class="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-slate-100 hover:border-pink-200 transition-all text-center">
-            <div class="w-12 h-8 border-2 border-slate-300 rounded p-1"><div class="w-full h-full bg-slate-200 text-center"></div></div>
-            <span class="text-xs font-bold text-slate-500 text-center">1 รูป (เดี่ยว)</span>
+            <div class="w-12 h-8 border-2 border-slate-300 rounded p-1 text-center"><div class="w-full h-full bg-slate-200 text-center"></div></div>
+            <span class="text-xs font-bold text-slate-500">1 รูป (เดี่ยว)</span>
           </button>
         </div>
       </div>
@@ -53,339 +53,30 @@
       </div>
     </div>
 
-    <!-- Camera -->
+    <!-- Step 1: Camera -->
     <div id="step-camera" class="hidden flex-col h-[85vh] min-h-[600px] bg-slate-900 text-center">
       <div class="p-4 bg-slate-900 text-white flex justify-between items-center z-10 border-b border-slate-800 shrink-0 text-center">
         <button onclick="resetToWelcome()" class="text-slate-400 hover:text-white px-3 py-1 bg-slate-800 rounded-lg text-xs">⬅️ กลับ</button>
-        <span class="font-semibold text-sm md:text-lg flex items-center gap-2 text-center"><div class="w-2 h-2 rounded-full bg-red-500 animate-pulse text-center"></div> Live View</span>
+        <span class="font-semibold text-sm md:text-lg flex items-center gap-2 text-center text-center"><div class="w-2 h-2 rounded-full bg-red-500 animate-pulse text-center"></div> Live View</span>
         <span id="live-photo-counter" class="text-slate-200 font-bold bg-slate-800 px-4 py-2 rounded-lg text-xs">0/3</span>
       </div>
       <div class="flex flex-col md:flex-row flex-1 overflow-hidden relative">
-        <div class="flex-1 video-container relative flex items-center justify-center bg-black text-center">
+        <div class="flex-1 video-container relative flex items-center justify-center bg-black text-center text-center">
           <video id="video-element" autoplay playsinline muted></video>
           <div id="camera-loading" class="absolute inset-0 flex items-center justify-center bg-black text-white text-lg z-0 text-center">เปิดกล้อง...</div>
-          <div id="countdown-overlay" class="hidden absolute inset-0 flex items-center justify-center z-20 pointer-events-none text-center"><span id="countdown-text" class="text-[150px] font-bold text-white drop-shadow-2xl">3</span></div>
+          <div id="countdown-overlay" class="hidden absolute inset-0 flex items-center justify-center z-20 pointer-events-none text-center"><span id="countdown-text" class="text-[150px] font-bold text-white drop-shadow-2xl text-center">3</span></div>
           <button onclick="toggleSettings()" class="absolute top-6 left-6 w-12 h-12 bg-black/40 text-white rounded-full flex items-center justify-center shadow-lg z-40 border border-white/20 text-center">⚙️</button>
-          <div id="live-settings-panel" class="settings-panel absolute bottom-32 left-6 bg-black/70 backdrop-blur-md p-5 rounded-2xl text-white z-30 border border-white/20 w-72 shadow-2xl text-left"><div id="filter-ui-live"></div></div>
+          <div id="live-settings-panel" class="settings-panel absolute bottom-32 left-6 bg-black/70 backdrop-blur-md p-5 rounded-2xl text-white z-30 border border-white/20 w-72 shadow-2xl text-left text-left"><div id="filter-ui-live"></div></div>
           <div class="absolute bottom-6 w-full flex justify-center items-center z-50 text-center"><button id="btn-live-capture" onclick="startCountdown()" class="shutter-btn flex items-center justify-center text-center"><div class="shutter-inner"></div></button></div>
         </div>
         <div class="w-full md:w-48 bg-slate-800 border-t md:border-t-0 md:border-l border-slate-700 flex flex-row md:flex-col items-center justify-start p-4 md:py-8 shrink-0 shadow-2xl z-10 gap-4 overflow-x-auto text-center"><div class="flex flex-row md:flex-col gap-3 w-full justify-center items-center flex-1 text-center" id="live-slots-container"></div></div>
       </div>
     </div>
 
-    <!-- Result -->
-    <div id="step-result" class="hidden flex-col md:flex-row h-[85vh] min-h-[600px] text-center">
-      <div class="flex-1 bg-slate-200 p-4 md:p-8 flex flex-col items-center justify-center overflow-y-auto gap-6 border-r border-slate-300 relative text-center">
+    <!-- Step 2: Result -->
+    <div id="step-result" class="hidden flex-col md:flex-row h-[85vh] min-h-[600px] text-center text-center">
+      <div class="flex-1 bg-slate-200 p-4 md:p-8 flex flex-col items-center justify-center overflow-y-auto gap-6 border-r border-slate-300 relative text-center text-center">
         <canvas id="result-canvas" class="hidden text-center"></canvas>
         <div id="final-A6-preview" class="w-full max-w-[280px] md:max-w-[320px] shadow-2xl transform transition-transform cursor-zoom-in group text-center" onclick="openModal(finalA6ImageDataUrl)">
-          <div class="bg-white rounded-sm shadow-md overflow-hidden relative text-center" id="final-preview-container" style="aspect-ratio: 1240/1748;"></div>
-          <div class="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-center"><span class="bg-white px-4 py-2 rounded-full font-bold text-sm shadow-lg">🔍 คลิกขยายแผ่นรูป</span></div>
-        </div>
-      </div>
-      <div class="w-full md:w-80 p-6 md:p-8 flex flex-col justify-start bg-white gap-4 relative overflow-y-auto shrink-0 hide-scrollbar text-center">
-        <h2 class="text-xl font-bold text-slate-800 title-font text-center">อวดรอยยิ้มของคุณ ✨</h2>
-        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 shadow-sm text-left text-left"><div id="filter-ui-result"></div></div>
-        <div class="flex flex-col gap-2 mt-2 text-center">
-          <button onclick="saveToCloud()" id="btn-cloud" class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg text-sm transition-all text-center">
-            <span id="cloud-text">☁️ บันทึกลงแกลลอรี่</span>
-            <div id="cloud-loader" class="hidden absolute w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin right-4 text-center"></div>
-          </button>
-          <button onclick="printPhotoLocal()" class="w-full py-3 bg-pink-600 hover:bg-pink-700 text-white rounded-xl font-semibold flex items-center justify-center gap-2 shadow-lg text-sm text-center">🖨️ ปริ้นท์รูปทันที</button>
-          <button onclick="downloadPhoto()" class="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-semibold flex items-center justify-center gap-2 shadow-lg text-sm text-center">⬇️ ดาวน์โหลด PNG</button>
-        </div>
-        <div id="save-status" class="hidden p-3 bg-green-100 text-green-700 rounded-lg text-sm mb-2 text-center font-semibold text-center">✅ บันทึกสำเร็จ! เปิดดู QR ในแกลลอรี่ได้เลย</div>
-        <button onclick="resetBooth()" class="w-full py-3 bg-white border-2 border-slate-200 text-slate-600 rounded-xl font-semibold text-sm text-center">🔄 ถ่ายใหม่</button>
-      </div>
-    </div>
-
-    <!-- Gallery -->
-    <div id="step-print-station" class="hidden flex-col h-[85vh] min-h-[600px] bg-slate-100 text-center">
-      <div class="p-4 md:p-6 bg-slate-900 text-white flex justify-between items-center shadow-md z-10 shrink-0 text-center">
-        <button onclick="showStep('step-welcome')" class="text-slate-400 hover:text-white px-3 py-1 bg-slate-800 rounded-lg text-sm text-center">⬅️ กลับ</button>
-        <h1 class="text-xl font-bold title-font text-center text-center">🖨️ แกลลอรี่ของทุกคน</h1>
-        <button onclick="refreshGallery()" id="btn-refresh-gallery" class="px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-xs font-semibold relative text-center text-center"><span id="refresh-text">🔄 โหลดรูป</span><div id="refresh-loader" class="hidden absolute right-3 w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin text-center"></div></button>
-      </div>
-      <div class="flex-1 overflow-y-auto p-4 md:p-8 hide-scrollbar text-center text-center"><div id="print-gallery" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 text-center text-center"></div></div>
-    </div>
-  </div>
-
-  <!-- QR Modal -->
-  <div id="qr-modal" class="fixed inset-0 bg-black/80 z-[110] hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity text-center text-center">
-    <div class="bg-white p-8 rounded-3xl max-w-xs w-full text-center flex flex-col items-center gap-4 text-center">
-        <h3 class="font-bold text-xl text-slate-800 text-center">สแกนรับรูป 📲</h3>
-        <div id="qr-modal-container" class="w-48 h-48 bg-slate-50 flex items-center justify-center rounded-xl overflow-hidden shadow-inner text-center"></div>
-        <p class="text-xs text-slate-500 text-center">รับรูปภาพฝีมือ ครูหนึ่ง<br>ใจดีที่สุดในจักรวาล</p>
-        <button onclick="closeQRModal()" class="w-full py-3 bg-pink-500 text-white rounded-xl font-bold text-center">ปิดหน้าต่าง</button>
-    </div>
-  </div>
-
-  <script>
-    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwvfU9DwKCCN6Qvx6LJWxil15sTX3F8wsR7otlmJy-W9YFuYAbGxgb3fnQz4jGKE8Qw2g/exec";
-    const DRIVE_FOLDER_ID = "12VlwiV8XFpJpkOdqzvQH5qtTQ2XHISnI"; 
-
-    let stream = null;
-    let photos = [];
-    let galleryMemory = []; 
-    let layoutType = 'strip';
-    let totalPhotosNeeded = 3;
-    let filterMode = 'color';
-    let zoomLevel = 'wide';
-    let zoomFactor = 1.0;
-    let inkDensity = 100;
-    let isSettingsCollapsed = false;
-    let finalA6ImageDataUrl = '';
-
-    const videoElement = document.getElementById('video-element');
-    const resultCanvas = document.getElementById('result-canvas');
-
-    function injectFilterUI(suffix) {
-      document.getElementById(`filter-ui-${suffix}`).innerHTML = `
-        <div class="mb-4 ${suffix === 'result' ? 'hidden' : ''}">
-          <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2 text-left">ระยะเลนส์</label>
-          <div class="flex gap-1 text-center"><button onclick="setLens('wide')" id="btn-lens-wide-${suffix}" class="flex-1 py-1 rounded-lg text-[9px] font-bold border text-center">Wide</button><button onclick="setLens('close')" id="btn-lens-close-${suffix}" class="flex-1 py-1 rounded-lg text-[9px] font-bold border text-center text-center">Close</button></div>
-        </div>
-        <div class="mb-4 text-left text-left">
-          <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2 text-left text-center">สไตล์สี</label>
-          <div class="grid grid-cols-2 gap-1.5 text-center text-center"><button onclick="setFilterMode('color')" id="btn-mode-color-${suffix}" class="py-1.5 rounded-lg text-[9px] font-bold border-2 text-center text-center">Normal</button><button onclick="setFilterMode('aura')" id="btn-mode-aura-${suffix}" class="py-1.5 rounded-lg text-[9px] font-bold border-2 text-center text-center text-center">Aura Pink</button><button onclick="setFilterMode('vibrant')" id="btn-mode-vibrant-${suffix}" class="py-1.5 rounded-lg text-[9px] font-bold border-2 text-center text-center text-center text-center">Vivid</button><button onclick="setFilterMode('bw')" id="btn-mode-bw-${suffix}" class="py-1.5 rounded-lg text-[9px] font-bold border-2 text-center text-center text-center">B&W</button></div>
-        </div>
-        <div class="space-y-1 text-left text-left text-left">
-          <div class="flex justify-between items-center text-left text-left"><label class="text-[10px] font-bold text-slate-400 uppercase text-left">ความเข้มหมึก</label><span id="val-density-${suffix}" class="text-[10px] font-bold text-pink-400 text-center">100%</span></div>
-          <input type="range" id="input-density-${suffix}" min="50" max="150" value="100" oninput="syncDensity(this.value)" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer text-center text-center text-center">
-        </div>
-      `;
-    }
-
-    injectFilterUI('live'); injectFilterUI('result');
-
-    function showStep(stepId) {
-      ['step-welcome', 'step-camera', 'step-result', 'step-print-station'].forEach(id => {
-          const el = document.getElementById(id);
-          if(el) { el.classList.add('hidden'); el.classList.remove('flex'); }
-      });
-      const target = document.getElementById(stepId);
-      if(target) { target.classList.remove('hidden'); target.classList.add('flex'); }
-      if (stepId === 'step-camera') { updateFilters(); updateSlots(); }
-      if (stepId === 'step-result') { generatePhotoStrip(); }
-      if (stepId === 'step-print-station') renderGallery(galleryMemory);
-    }
-
-    function setLayout(type) { layoutType = type; totalPhotosNeeded = (type === 'strip') ? 3 : 1; document.getElementById('layout-btn-strip').classList.toggle('border-pink-500', type === 'strip'); document.getElementById('layout-btn-single').classList.toggle('border-pink-500', type === 'single'); }
-    function toggleSettings() { isSettingsCollapsed = !isSettingsCollapsed; document.getElementById('live-settings-panel').classList.toggle('settings-collapsed', isSettingsCollapsed); }
-    function setLens(level) { zoomLevel = level; zoomFactor = (level === 'close') ? 1.5 : 1.0; updateFilters(); }
-    function setFilterMode(m) { filterMode = m; updateFilters(); if (photos.length === totalPhotosNeeded && !document.getElementById('step-result').classList.contains('hidden')) { generatePhotoStrip(); } }
-    function syncDensity(v) { inkDensity = v; updateFilters(); if (photos.length === totalPhotosNeeded && !document.getElementById('step-result').classList.contains('hidden')) { generatePhotoStrip(); } }
-
-    function updateFilters() {
-      const fCSS = getFilterCSS();
-      ['live', 'result'].forEach(s => {
-          const bW = document.getElementById(`btn-lens-wide-${s}`); const bC = document.getElementById(`btn-lens-close-${s}`);
-          if (bW && bC) { bW.className = (zoomLevel === 'wide') ? "flex-1 py-1 rounded-lg text-[9px] font-bold bg-pink-500 text-white border-pink-500 text-center" : "flex-1 py-1 rounded-lg text-[9px] font-bold bg-transparent text-slate-400 border-slate-300 text-center"; bC.className = (zoomLevel === 'close') ? "flex-1 py-1 rounded-lg text-[9px] font-bold bg-pink-500 text-white border-pink-500 text-center" : "flex-1 py-1 rounded-lg text-[9px] font-bold bg-transparent text-slate-400 border-slate-300 text-center text-center text-center"; }
-          ['color', 'aura', 'vibrant', 'bw'].forEach(m => {
-              const btn = document.getElementById(`btn-mode-${m}-${s}`);
-              if (btn) btn.className = (filterMode === m) ? "py-1.5 rounded-lg text-[9px] font-bold bg-pink-500 text-white border-pink-500 text-center" : "py-1.5 rounded-lg text-[9px] font-bold bg-white text-slate-600 border-slate-200 text-center";
-          });
-          const el = document.getElementById(`input-density-${s}`); if (el) { el.value = inkDensity; document.getElementById(`val-density-${s}`).innerText = inkDensity + '%'; }
-      });
-      if(videoElement) { videoElement.style.filter = fCSS; videoElement.style.transform = `scaleX(-1) scale(${zoomFactor})`; }
-    }
-
-    function getFilterCSS() {
-      let gs=0, sat=inkDensity, br=1.5-(inkDensity/200), con=inkDensity/100, sep=0, hue=0;
-      if(filterMode === 'vibrant') { sat*=2; con*=1.2; }
-      if(filterMode === 'aura') { br*=1.1; con*=0.9; sat*=1.1; sep=10; hue=-15; }
-      if(filterMode === 'bw') { gs=100; sat=0; }
-      return `grayscale(${gs}%) sepia(${sep}%) hue-rotate(${hue}deg) brightness(${br}) contrast(${con}) saturate(${sat}%)`;
-    }
-
-    function updateSlots() {
-      const container = document.getElementById(`live-slots-container`);
-      if(!container) return; container.innerHTML = '';
-      for (let i = 0; i < totalPhotosNeeded; i++) {
-        const slot = document.createElement('div');
-        slot.className = photos[i] ? "w-16 h-24 md:w-24 md:h-36 rounded-lg border-2 border-solid border-pink-500 bg-slate-700/50 overflow-hidden relative text-center" : "w-16 h-24 md:w-24 md:h-36 rounded-lg border-2 border-dashed border-slate-600 bg-slate-700/50 overflow-hidden relative text-center text-center text-center";
-        if (photos[i]) slot.innerHTML = `<img src="${photos[i]}" class="w-full h-full object-cover text-center text-center text-center text-center"><div class="delete-btn text-center text-center text-center" onclick="deletePhoto(${i})">×</div>`;
-        else slot.innerHTML = `<span class="text-2xl opacity-20 font-bold flex h-full w-full items-center justify-center text-center">${i + 1}</span>`;
-        container.appendChild(slot);
-      }
-      if (photos.length === totalPhotosNeeded) { stopLiveCamera(); setTimeout(() => showStep('step-result'), 600); }
-    }
-
-    function deletePhoto(index) { event.stopPropagation(); photos.splice(index, 1); updateSlots(); }
-
-    async function startLiveCamera() {
-      photos = [];
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 }, audio: false });
-        videoElement.srcObject = stream;
-        videoElement.onloadedmetadata = () => videoElement.play().then(() => document.getElementById('camera-loading').classList.add('hidden'));
-        showStep('step-camera');
-      } catch (err) { alert("กล้องเข้าไม่ได้ครับ"); }
-    }
-
-    function stopLiveCamera() { if (stream) stream.getTracks().forEach(t => t.stop()); }
-
-    async function startCountdown() {
-      if (photos.length >= totalPhotosNeeded) return;
-      const text = document.getElementById('countdown-text'); document.getElementById('countdown-overlay').classList.remove('hidden');
-      for(let i=3; i>0; i--) { text.innerText = i; text.style.animation = 'none'; text.offsetHeight; text.style.animation = 'ping 1s infinite'; await new Promise(r => setTimeout(r, 1000)); }
-      document.getElementById('countdown-overlay').classList.add('hidden'); takePhoto(); 
-    }
-
-    function takePhoto() {
-      document.getElementById('flash-overlay').classList.add('flash-active'); setTimeout(() => document.getElementById('flash-overlay').classList.remove('flash-active'), 150);
-      const canvas = document.createElement('canvas'); canvas.width = 660; canvas.height = 440;
-      const ctx = canvas.getContext('2d');
-      const vW = videoElement.videoWidth; const vH = videoElement.videoHeight;
-      const sW = vW / zoomFactor; const sH = vH / zoomFactor;
-      const sX = (vW - sW) / 2; const sY = (vH - sH) / 2;
-      ctx.translate(canvas.width, 0); ctx.scale(-1, 1);
-      ctx.drawImage(videoElement, sX, sY, sW, sH, 0, 0, canvas.width, canvas.height);
-      photos.push(canvas.toDataURL('image/jpeg', 0.95)); updateSlots();
-    }
-
-    async function saveToCloud() {
-      const btn = document.getElementById('btn-cloud'); const loader = document.getElementById('cloud-loader');
-      btn.disabled = true; loader.classList.remove('hidden');
-      try {
-        const res = await fetch(GAS_API_URL, { 
-            method: 'POST', 
-            headers: {'Content-Type':'text/plain'}, 
-            body: JSON.stringify({ action: 'savePhoto', image: finalA6ImageDataUrl, folderId: DRIVE_FOLDER_ID }) 
-        });
-        const data = await res.json();
-        loader.classList.add('hidden');
-        if(data.success) {
-            document.getElementById('save-status').classList.remove('hidden');
-            document.getElementById('cloud-text').innerText = "☁️ บันทึกสำเร็จ!";
-            // เรียลไทม์: เพิ่มรูปใหม่เข้า Memory ทันที เพื่อให้แสดงในแกลลอรี่ได้รวดเร็ว
-            galleryMemory.unshift({ id: data.id, url: finalA6ImageDataUrl, date: new Date().toISOString() });
-        } else {
-            alert("Error: " + data.error); btn.disabled = false;
-        }
-      } catch (e) { 
-          loader.classList.add('hidden'); btn.disabled = false; alert("ส่งข้อมูลไม่สำเร็จครับ"); 
-      }
-    }
-
-    function generatePhotoStrip() {
-      const ctx = resultCanvas.getContext('2d'); const A6W = 1240, A6H = 1748;
-      resultCanvas.width = A6W; resultCanvas.height = A6H;
-      ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, A6W, A6H);
-      const preview = document.getElementById('final-preview-container'); 
-      if(preview) preview.innerHTML = `<div class="absolute inset-0 bg-white text-center text-center"></div>`;
-      const fStr = getFilterCSS();
-
-      let loaded = 0;
-      if (layoutType === 'strip') {
-          // --- ปรับระยะให้สมดุล กระจายให้เต็มแผ่นมากขึ้น ---
-          const gap = 65, startY = 120, startX = (A6W - 660) / 2; 
-          photos.forEach((src, i) => {
-            const y = startY + (i * (440 + gap));
-            const img = new Image();
-            img.onload = () => {
-              ctx.shadowColor = 'rgba(0,0,0,0.1)'; ctx.shadowBlur = 10; ctx.filter = fStr;
-              ctx.drawImage(img, startX, y, 660, 440); ctx.filter = 'none';
-              ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 1; ctx.strokeRect(startX, y, 660, 440);
-              const div = document.createElement('div'); div.className = "absolute shadow-sm overflow-hidden text-center";
-              div.style.left = `${(startX/A6W)*100}%`; div.style.top = `${(y/A6H)*100}%`;
-              div.style.width = `${(660/A6W)*100}%`; div.style.height = `${(440/A6H)*100}%`;
-              div.innerHTML = `<img src="${src}" style="filter:${fStr}" class="w-full h-full object-cover text-center text-center">`;
-              if(preview) preview.appendChild(div);
-              if (++loaded === 3) finishDrawing(y + 440 + 90);
-            }; img.src = src;
-          });
-      } else {
-          const SW = 1100, SH = SW * (440/660), sX = (A6W-SW)/2, sY = (A6H-SH)/2 - 100;
-          const img = new Image();
-          img.onload = () => {
-              ctx.shadowColor = 'rgba(0,0,0,0.1)'; ctx.shadowBlur = 20; ctx.filter = fStr;
-              ctx.drawImage(img, sX, sY, SW, SH);
-              ctx.filter = 'none'; ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 2; ctx.strokeRect(sX, sY, SW, SH);
-              const div = document.createElement('div'); div.className = "absolute shadow-lg overflow-hidden text-center text-center text-center text-center";
-              div.style.left = `${(sX/A6W)*100}%`; div.style.top = `${(sY/A6H)*100}%`;
-              div.style.width = `${(SW/A6W)*100}%`; div.style.height = `${(SH/A6H)*100}%`;
-              div.innerHTML = `<img src="${photos[0]}" style="filter:${fStr}" class="w-full h-full object-cover text-center text-center text-center text-center text-center">`;
-              if(preview) preview.appendChild(div);
-              finishDrawing(sY + SH + 180);
-          }; img.src = photos[0];
-      }
-
-      function finishDrawing(textY) {
-        // ล็อก Safe Zone ด้านล่างเพื่อป้องกันการทับรูป และใช้ชื่อ ครูหนึ่ง
-        const safeY = Math.min(textY, 1748 - 140);
-        ctx.fillStyle = '#1e293b'; ctx.font = 'bold 55px "Mali", sans-serif'; ctx.textAlign = 'center';
-        ctx.fillText('✨ NOKYOONG PHOTO ✨', A6W / 2, safeY);
-        ctx.font = '32px sans-serif'; ctx.fillStyle = '#64748b';
-        const date = new Date().toLocaleDateString('th-TH');
-        ctx.fillText(`ครูหนึ่ง • ${date}`, A6W / 2, safeY + 60);
-        const title = document.createElement('div'); title.className = "absolute w-full text-center flex flex-col items-center text-center";
-        title.style.top = `${((safeY+20)/A6H)*100}%`; title.style.transform = "translateY(-50%)";
-        title.innerHTML = `<div class="font-bold text-slate-800 title-font text-base text-center text-center text-center text-center">✨ NOKYOONG PHOTO ✨</div><div class="text-slate-500 text-[10px] text-center text-center text-center text-center text-center text-center">ครูหนึ่ง • ${date}</div>`;
-        if(preview) preview.appendChild(title); 
-        finalA6ImageDataUrl = resultCanvas.toDataURL('image/jpeg', 0.95);
-      }
-    }
-
-    function openModal(src) { if(!src) return; document.getElementById('modal-img').src = src; document.getElementById('image-modal').classList.remove('hidden'); }
-    function closeModal() { document.getElementById('image-modal').classList.add('hidden'); }
-    function printPhotoLocal() { if(finalA6ImageDataUrl) printPhotoFromUrl(finalA6ImageDataUrl); }
-    function printPhotoFromUrl(url) {
-      const w = window.open('', '_blank');
-      if (w) { w.document.write(`<html><head><style>body{margin:0;display:flex;justify-content:center;align-items:center;height:100vh;}img{max-width:100%;max-height:100%;object-fit:contain;}@media print{@page{margin:0;size:A6;}img{width:100vw;height:100vh;}}</style></head><body><img src="${url}" onload="setTimeout(()=>window.print(),1000)"></body></html>`); w.document.close(); }
-    }
-    function downloadPhoto() { const a = document.createElement('a'); a.download = `NOKYOONG_${Date.now()}.png`; a.href = finalA6ImageDataUrl; a.click(); }
-    function resetBooth() { stopLiveCamera(); photos = []; finalA6ImageDataUrl = ''; document.getElementById('save-status').classList.add('hidden'); document.getElementById('cloud-text').innerText = "☁️ บันทึกลงแกลลอรี่"; showStep('step-welcome'); }
-
-    // Fast QR Generation (Offline)
-    function showQR(photoId) {
-        const modal = document.getElementById('qr-modal');
-        const container = document.getElementById('qr-modal-container');
-        container.innerHTML = ''; 
-        modal.classList.remove('hidden');
-        const downloadUrl = `${GAS_API_URL}?p=${photoId}`;
-        new QRCode(container, { text: downloadUrl, width: 192, height: 192, colorDark : "#1e293b", colorLight : "#ffffff", correctLevel : QRCode.CorrectLevel.H });
-    }
-
-    function closeQRModal() { document.getElementById('qr-modal').classList.add('hidden'); }
-
-    async function refreshGallery() {
-      const br = document.getElementById('btn-refresh-gallery'); const lr = document.getElementById('refresh-loader');
-      if(br) br.disabled = true; if(lr) lr.classList.remove('hidden');
-      try {
-        const res = await fetch(GAS_API_URL, { method: 'POST', headers: {'Content-Type':'text/plain'}, body: JSON.stringify({ action: 'getGallery' }) });
-        const data = await res.json();
-        if(br) br.disabled = false; if(lr) lr.classList.add('hidden');
-        if(data.success) { galleryMemory = data.gallery; renderGallery(galleryMemory); }
-      } catch (error) { if(br) br.disabled = false; if(lr) lr.classList.add('hidden'); }
-    }
-    
-    function renderGallery(list) {
-      const g = document.getElementById('print-gallery'); if(!g) return; g.innerHTML = '';
-      if (!list || list.length === 0) { g.innerHTML = '<div class="col-span-full py-20 text-center opacity-50 text-center">ไม่มีรูปภาพ</div>'; return; }
-      list.forEach(item => {
-        // ใช้ข้อมูล Base64 "โดยตรง" จาก Sheet
-        let displayUrl = item.url || "";
-        
-        const d = isNaN(new Date(item.date)) ? item.date : new Date(item.date).toLocaleDateString('th-TH');
-        const card = document.createElement('div'); card.className = "bg-white p-3 rounded-xl shadow-sm border text-center text-center text-center text-center text-center text-center text-center";
-        card.innerHTML = `
-            <div class="relative aspect-[1240/1748] bg-slate-100 rounded-lg overflow-hidden mb-3 cursor-zoom-in text-center text-center text-center text-center text-center text-center text-center" onclick="openModal('${displayUrl}')">
-                <img src="${displayUrl}" class="w-full h-full object-contain text-center text-center text-center text-center text-center text-center text-center" onerror="this.src='https://placehold.co/1240x1748?text=Image+Loading'">
-                <div class="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity text-center text-center text-center text-center text-center text-center text-center">
-                    <span class="bg-white px-3 py-1 rounded-full text-[10px] font-bold text-center text-center text-center text-center">🔍 ขยาย</span>
-                </div>
-            </div>
-            <div class="mb-3 text-[10px] text-slate-500 text-center text-center text-center text-center text-center text-center">⏱️ ${d}</div>
-            <div class="grid grid-cols-2 gap-2 text-center text-center text-center text-center text-center text-center text-center text-center">
-                <button onclick="printPhotoFromUrl('${displayUrl}')" class="py-2 bg-pink-600 text-white rounded-lg font-bold text-[10px] text-center text-center text-center text-center text-center text-center">🖨️ ปริ้นท์</button>
-                <button onclick="showQR('${item.id}')" class="py-2 bg-blue-600 text-white rounded-lg font-bold text-[10px] text-center text-center text-center text-center text-center text-center">📲 QR</button>
-            </div>`;
-        g.appendChild(card);
-      });
-    }
-
-    function resetToWelcome() { stopLiveCamera(); photos = []; showStep('step-welcome'); }
-    window.onload = refreshGallery;
-  </script>
-</body>
-</html>
+          <div class="bg-white rounded-sm shadow-md overflow-hidden relative text-center text-center" id="final-preview-container" style="aspect-ratio: 1240/1748;"></div>
+          <div class="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-center"><span class="bg-white px-4 py-2 rounded-full font-bold text-sm shadow-lg text-center">🔍 คลิก
